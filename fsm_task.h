@@ -112,9 +112,7 @@ class FsmTask
 {
 
 public:
-    /*
-        Create the FSM Task
-    */
+    //Create the FSM Task
     FsmTask(uint32_t taskSize, uint8_t priority, const char *name)
     {
         vSemaphoreCreateBinary(m_semaphore);
@@ -142,12 +140,15 @@ public:
             xSemaphoreGive(m_semaphore);
     }
 
-    /*
-        Get the states variant
-    */
+    //Get the states variant
     const StateVariant &GetState() const { return m_states; }
 
 private:
+    StateVariant m_states;
+    EventVariant m_events;
+    TaskHandle_t m_task;
+    SemaphoreHandle_t m_semaphore;
+
     //Handle event dispatch
     void dispatch()
     {
@@ -182,11 +183,6 @@ private:
                        m_states);
         }
     }
-
-    StateVariant m_states;
-    EventVariant m_events;
-    TaskHandle_t m_task;
-    SemaphoreHandle_t m_semaphore;
 
     static void taskFunc(void *arg)
     {
