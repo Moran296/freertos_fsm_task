@@ -31,7 +31,7 @@
     class ButtonFSM : public FsmTask<sample_fsm, states, events>
     {
     public:
-        sample_fsm() : FsmTask(2048, 3, "button_fsm") {}
+        ButtonFSM() : FsmTask(2048, 3, "button_fsm") {}
 
         //DEFAULT_HANDLER, will be invoked for undefined state/events
         template <typename State, typename Event>
