@@ -26,12 +26,12 @@ in order to use the library one must:
     struct state_pressed {};
     
     //2. order states/events in a variant. First state in variant is the entry state.
-    using EventsVariant = std::variant<event_press, event_release, event_timer>
-    using EventsVariant = std::variant<state_idle, state_pressed>
+    using Events = std::variant<event_press, event_release, event_timer>
+    using States = std::variant<state_idle, state_pressed>
 
     // 3. Create the state machine
     //BUTTON STATE MACHINE
-    class ButtonFSM : public FsmTask<sample_fsm, states, events>
+    class ButtonFSM : public FsmTask<ButtonFSM, Events, States>
     {
     public:
         ButtonFSM() : FsmTask(2048, 3, "button_fsm") {}
