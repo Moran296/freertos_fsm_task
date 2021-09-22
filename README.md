@@ -23,7 +23,9 @@ in order to use the library one must:
     
     //STATES:
     struct state_idle {};
-    struct state_pressed {};
+    struct state_pressed {
+        uint32_t time_pressed() {return 0;}
+    };
     
     //2. order states/events in a variant. First state in variant is the entry state.
     using Events = std::variant<event_press, event_release, event_timer>
@@ -83,3 +85,27 @@ in order to use the library one must:
             //do state exit logic
         }
     };
+
+
+    int main() {
+
+        ButtonFSM button;
+
+        configASSERT(button.IsInState<state_idle>()); //we start at idle state
+         
+        button.Dispatch(press_event{}); // we move to pressed state
+        vTaskDelay(pdMS_TO_TICKS(100));
+        configASSERT(button.IsInState<state_pressed>());
+
+        //We can do something with the state too (we just have to be sure we are in this state, otherwise we assert)
+        auto& p_state = button.Get<state_pressed>();
+        printf("time pressed = %d", p_state.time_pressed());
+
+        button.Dispatch(timer_event{3_sec}); // we stay in pressed state
+        vTaskDelay(pdMS_TO_TICKS(100));
+        configASSERT(button.IsInState<state_pressed>());
+
+        button.Dispatch(release_event{}); // we go back to idle state
+        vTaskDelay(pdMS_TO_TICKS(100));
+        configASSERT(button.IsInState<state_idle>());
+    }
