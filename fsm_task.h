@@ -20,15 +20,15 @@
     struct event_press {};
     struct event_release {};
     struct event_timer {int seconds}
-    using EventsVariant = std::variant<event_press, event_release, event_timer>
+    using events = std::variant<event_press, event_release, event_timer>
 
     //STATES:
     struct state_idle {};
     struct state_pressed {};
-    using EventsVariant = std::variant<state_idle, state_pressed>
+    using states = std::variant<state_idle, state_pressed>
 
     //STATE_MACHINE
-    class ButtonFSM : public FsmTask<sample_fsm, states, events>
+    class ButtonFSM : public FsmTask<ButtonFSM, states, events>
     {
     public:
         ButtonFSM() : FsmTask(2048, 3, "button_fsm") {}
