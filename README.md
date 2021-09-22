@@ -1,29 +1,36 @@
 # freertos_fsm_task
-A Freertos task class running a lightweight finite state machine using variants
+A Freertos task class running a lightweight finite state machine using std::variants and std::optional (c++ 17)
 
-This implementation of the fsm class is based on Mateusz Pusz mpusz/fsm-variant repository presented in his cppCon talk.
+This implementation of the fsm class is based on Mateusz Pusz mpusz/fsm-variant repository presented in his CppCon talk.
 The difference is this implemantation runs under a freertos task.
 
-### Usage:
-    in order to use the library one must:
-    1. first create the structs/classes used as events and states.
-    2. ordered states/events in a variant, the first index in the state variant is the entry state.
-    3. create a class which inherits the fsm task variants and itself (CRTP) as template arguments, and task info as ctor args
+### Note:
+Currently the code is only tested with esp32 (esp-idf) and uses esp-idf xTaskCreatePinnedToCore to create the task.
+
+## Usage:
+in order to use the library one must:
+1. first create the structs/classes used as events and states.
+2. order states/events in a variant, the first index in the state variant is the entry state. (see example)
+3. create a class which inherits the fsm task variants and itself (CRTP) as template arguments, and task info as ctor args
     
 ###   Example for a button fsm:
     
+    //1. Create events and state structs:
     //EVENTS:
     struct event_press {};
     struct event_release {};
     struct event_timer {int seconds}
-    using EventsVariant = std::variant<event_press, event_release, event_timer>
-
+    
     //STATES:
     struct state_idle {};
     struct state_pressed {};
+    
+    //2. order states/events in a variant. First state in variant is the entry state.
+    using EventsVariant = std::variant<event_press, event_release, event_timer>
     using EventsVariant = std::variant<state_idle, state_pressed>
 
-    //STATE_MACHINE
+    // 3. Create the state machine
+    //BUTTON STATE MACHINE
     class ButtonFSM : public FsmTask<sample_fsm, states, events>
     {
     public:
