@@ -82,7 +82,8 @@
 
     ButtonFSM button;
 
-    button.Dispatch(press_event{});
+    bool dispatchedSuccessfully = button.Dispatch(press_event{});
+    configASSERT(dispatchedSuccessfully); // Check if dispatched successfully, otherwise might be better to enlarge event queue
     configASSERT(button.IsInState<state_pressed>());
 
     button.Dispatch(timer_event{3_sec});
@@ -120,7 +121,10 @@ public:
 
     //Dispatch an event to state machine
     template <typename Event>
-    void Dispatch(Event &&event, bool fromISR = false);
+    bool Dispatch(Event &&event, TickType_t timeout = 0);
+
+    template <typename Event>
+    bool DispatchFromISR(Event &&event, BaseType_t* const xHigherPriorityTaskWoken);
 
     //Whether the fsm is currently in a certain state
     template <class State>
@@ -166,19 +170,19 @@ FsmTask<Derived, StateVariant, EventVariant>::FsmTask(uint32_t taskSize, uint8_t
 //DISPATCH AN EVENT
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
-void FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, bool fromISR)
+bool FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, TickType_t timeout)
 {
     EventVariant var{event};
-    if (fromISR)
-    {
-        BaseType_t hasHigherWoken = pdFALSE;
-        xQueueSendFromISR(m_eventQueue, &var, &hasHigherWoken);
-        if (hasHigherWoken)
-            portYIELD_FROM_ISR();
-    }
+    return xQueueSend(m_eventQueue, &var, timeout) == pdTRUE;
+}
 
-    else
-        xQueueSend(m_eventQueue, &var, 0);
+//DISPATCH AN EVENT FROM ISR
+template <typename Derived, typename StateVariant, typename EventVariant>
+template <typename Event>
+bool FsmTask<Derived, StateVariant, EventVariant>::DispatchFromISR(Event &&event, BaseType_t* const xHigherPriorityTaskWoken)
+{
+    EventVariant var{event};
+    return xQueueSendFromISR(m_eventQueue, &var, xHigherPriorityTaskWoken) == pdTRUE;
 }
 
 //--------------------- TASK MANAGEMENT FUNCTIONS IMPLEMENTATION ----------------

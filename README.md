@@ -12,21 +12,21 @@ in order to use the library one must:
 1. first create the structs/classes used as events and states.
 2. order states/events in a variant, the first index in the state variant is the entry state. (see example)
 3. create a class which inherits the fsm task variants and itself (CRTP) as template arguments, and task info as ctor args
-    
+
 ###   Example for a button fsm:
-    
+
     //1. Create events and state structs:
     //EVENTS:
     struct event_press {};
     struct event_release {};
     struct event_timer {int seconds}
-    
+
     //STATES:
     struct state_idle {};
     struct state_pressed {
         uint32_t time_pressed() {return 0;}
     };
-    
+
     //2. order states/events in a variant. First state in variant is the entry state.
     using Events = std::variant<event_press, event_release, event_timer>
     using States = std::variant<state_idle, state_pressed>
@@ -92,8 +92,10 @@ in order to use the library one must:
         ButtonFSM button;
 
         configASSERT(button.IsInState<state_idle>()); //we start at idle state
-         
-        button.Dispatch(press_event{}); // we move to pressed state
+
+        bool dispatchedSuccessfully = button.Dispatch(press_event{}); // we move to pressed state
+        configASSERT(dispatchedSuccessfully); // check that event was dispatched successfully (if not consider enlarging event queue)
+
         vTaskDelay(pdMS_TO_TICKS(100));
         configASSERT(button.IsInState<state_pressed>());
 
@@ -101,11 +103,28 @@ in order to use the library one must:
         auto& p_state = button.Get<state_pressed>();
         printf("time pressed = %d", p_state.time_pressed());
 
-        button.Dispatch(timer_event{3_sec}); // we stay in pressed state
+        dispatchedSuccessfully = button.Dispatch(timer_event{3_sec}); // we stay in pressed state
+        configASSERT(dispatchedSuccessfully);
+
         vTaskDelay(pdMS_TO_TICKS(100));
         configASSERT(button.IsInState<state_pressed>());
 
-        button.Dispatch(release_event{}); // we go back to idle state
+        dispatchedSuccessfully = button.Dispatch(release_event{}, pdMS_TO_TICKS(300)); //we can also provide a timeout for dispatch
+        configASSERT(dispatchedSuccessfully);
+
         vTaskDelay(pdMS_TO_TICKS(100));
         configASSERT(button.IsInState<state_idle>());
+    }
+
+    void a_button_ISR(void* arg) {
+        ButtonFSM *button = reinterpret_cast<ButtonFSM *>(arg);
+        BaseType_t higherPriorityTaskWoken = pdFALSE;
+        bool isButtonPressed = a_way_to_know_if_button_is_pushed_or_released();
+        if  (isButtonPressed)
+            button->DispatchFromIsr(press_event{}, &higherPriorityTaskWoken);
+        else
+            button->DispatchFromIsr(release_event{}, &higherPriorityTaskWoken);
+
+        if (higherPriorityTaskWoken)
+            portYIELD_FROM_ISR();
     }
