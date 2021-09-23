@@ -13,7 +13,9 @@ in order to use the library one must:
 2. order states/events in a variant, the first index in the state variant is the entry state. (see example)
 3. create a class which inherits the fsm task variants and itself (CRTP) as template arguments, and task info as ctor args
 
-###   Example for a button fsm:
+##   Example for a button fsm:
+
+### Creating the fsm
 
     //1. Create events and state structs:
     //EVENTS:
@@ -85,7 +87,8 @@ in order to use the library one must:
             //do state exit logic
         }
     };
-
+    
+### invoking and using the fsm
 
     int main() {
 
@@ -115,6 +118,8 @@ in order to use the library one must:
         vTaskDelay(pdMS_TO_TICKS(100));
         configASSERT(button.IsInState<state_idle>());
     }
+    
+### an ISR example
 
     void a_button_ISR(void* arg) {
         ButtonFSM *button = reinterpret_cast<ButtonFSM *>(arg);
