@@ -41,7 +41,7 @@ This library wants to change this (untested code):
         m_group = xEventGroupCreateStatic();
     }
     
-   void SomeManager::some_manager_task_func(void* arg) {
+    void SomeManager::some_manager_task_func(void* arg) {
         SomeManager* m = reinterpret_cast<SomeManager *>(arg)
         for(;;) {
             EventBits_t events = xEventGroupWaitBits(m_group, 0xffffffffff, pdTRUE, pdFALSE, portMAX_DELAY);
