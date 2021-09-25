@@ -148,7 +148,7 @@ private:
 
     void mainTaskFunc();
     void dispatch();
-    void handleNewState(std::optional<StateVariant> newState);
+    void handleNewState(std::optional<StateVariant> &&newState);
 
     StateVariant m_states{};
     EventVariant m_events{};
@@ -218,12 +218,12 @@ void FsmTask<Derived, StateVariant, EventVariant>::dispatch()
         [&](auto &stateVar, auto &eventVar) -> std::optional<StateVariant> { return child.on_event(stateVar, eventVar); },
         m_states, m_events);
 
-    handleNewState(newState);
+    handleNewState(std::move(newState));
 }
 
 //HANDLE NEW STATE TRANSITION
 template <typename Derived, typename StateVariant, typename EventVariant>
-void FsmTask<Derived, StateVariant, EventVariant>::handleNewState(std::optional<StateVariant> newState)
+void FsmTask<Derived, StateVariant, EventVariant>::handleNewState(std::optional<StateVariant> &&newState)
 {
     Derived &child = static_cast<Derived &>(*this);
     if (!newState)
