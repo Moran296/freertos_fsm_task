@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include <variant>
 #include <optional>
 
@@ -124,7 +125,7 @@ public:
     bool Dispatch(Event &&event, TickType_t timeout = 0);
 
     template <typename Event>
-    bool DispatchFromISR(Event &&event, BaseType_t* const xHigherPriorityTaskWoken);
+    bool DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken);
 
     //Whether the fsm is currently in a certain state
     template <class State>
@@ -179,7 +180,7 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, TickT
 //DISPATCH AN EVENT FROM ISR
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
-bool FsmTask<Derived, StateVariant, EventVariant>::DispatchFromISR(Event &&event, BaseType_t* const xHigherPriorityTaskWoken)
+bool FsmTask<Derived, StateVariant, EventVariant>::DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken)
 {
     EventVariant var{event};
     return xQueueSendFromISR(m_eventQueue, &var, xHigherPriorityTaskWoken) == pdTRUE;
