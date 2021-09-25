@@ -38,6 +38,7 @@ A better abstraction of a class, especially big manager tasks will be divided in
     
     SomeManager::SomeManager() {
         xTaskCreatePinnedToCore(some_manager_task_func, "example", 2048, this, 3, &m_task, tskNO_AFFINITY);
+        assert(m_task);
         m_group = xEventGroupCreateStatic();
     }
     
@@ -47,17 +48,19 @@ A better abstraction of a class, especially big manager tasks will be divided in
             EventBits_t events = xEventGroupWaitBits(m_group, 0xffffffffff, pdTRUE, pdFALSE, portMAX_DELAY);
             if (events & Events::EVENT_1) {
                 if (m_state = States::STATE_1)
-                    //do something;
+                    //do something crazy;
                 else
-                    //something else
+                    //do something stupid 
             }
             
             if (events & Events::EVENT_2) {
                 if (m_state = States::STATE_1)
                     //do something;
-                else
+                else 
                     //something else
             }
+            
+            //more ugly if's forever...
         }
    }
    
