@@ -1,17 +1,118 @@
 # freertos_fsm_task
-A Freertos task class running a lightweight finite state machine using std::variants and std::optional (c++ 17)
+A Freertos task class running a lightweight finite state machine using std::variants and std::optional (c++ 17) to achieve efficient inheritence.
 
 This implementation of the fsm class is based on Mateusz Pusz mpusz/fsm-variant repository presented in his CppCon talk.
-The difference is this implemantation runs under a freertos task.
+The difference is that this implemantation runs under a freertos task.
 
 ### Note:
 Currently the code is only tested with esp32 (esp-idf) and uses esp-idf xTaskCreatePinnedToCore to create the task.
+
+## Motivation:
+Writing event driven code for embedded software, finite state machines is one of the techniques to avoid spaghetti code. 
+But doing the old task initialization, event group, semaphore etc.. we create boiler plate that does not fully looks like a fsm,
+and as a result the task function itself looks like a mass of if's and elses.
+A better abstraction of a class, especially big manager tasks will be divided into states and events.
+
+This library wants to change this (untested code):
+
+    class SomeManager {
+    public:
+        enum class States {
+            STATE_1,
+            STATE_2,
+        };
+        
+        enum class Events {
+            EVENT_1 = BIT(0),
+            EVENT_2 = BIT(1)
+        }
+        
+        SomeManager();
+                
+    private:
+        static some_manager_task_func(void *arg);
+        TaskHandle_t m_task{};
+        EventGroupHandle_t m_group;
+        States m_state;
+    };
+    
+    SomeManager::SomeManager() {
+        xTaskCreatePinnedToCore(some_manager_task_func, "example", 2048, this, 3, &m_task, tskNO_AFFINITY);
+        m_group = xEventGroupCreateStatic();
+    }
+    
+   void SomeManager::some_manager_task_func(void* arg) {
+        SomeManager* m = reinterpret_cast<SomeManager *>(arg)
+        for(;;) {
+            EventBits_t events = xEventGroupWaitBits(m_group, 0xffffffffff, pdTRUE, pdFALSE, portMAX_DELAY);
+            if (events & Events::EVENT_1) {
+                if (m_state = States::STATE_1)
+                    //do something;
+                else
+                    //something else
+            }
+            
+            if (events & Events::EVENT_2) {
+                if (m_state = States::STATE_1)
+                    //do something;
+                else
+                    //something else
+            }
+        }
+   }
+   
+to something like this:
+
+    #define CALL_ON_STATE_ENTRY 1
+    #define CALL_ON_STATE_EXIT 1
+    #include "fsm_task.h"
+
+    struct STATE_1 {};
+    struct STATE_2 {};
+    using States = std::variant<STATE_1, STATE_2>;
+        
+    struct EVENT_1 {};
+    struct EVENT_2 {};
+    using Events = std::variant<EVENT_1, EVENT_2>;
+            
+    class SomeManager : public FsmTask<SomeManager, States, Events>
+    {
+        public:
+        SomeManager() : FsmTask(2048, 3, "name") {}
+    
+        auto on_event(STATE_1&, EVENT_1&) {return STATE_2{};}
+        auto on_event(STATE_1&, EVENT_2&) {return std::nullopt;}
+        auto on_event(STATE_2&, EVENT_1&) {return STATE_1{};}
+        auto on_event(STATE_2&, EVENT_2&) {return std::nullopt;}
+    
+        void on_entry(STATE_1&);
+        void on_entry(STATE_2&);
+    
+        void on_exit(STATE_1&);
+        void on_exit(STATE_2&);
+
+        //default handlers
+        template <class State, class Event>
+        auto on_event(State, Event) {return std::nullopt;}
+    
+        template <class State>
+        auto on_entry(State&) {/*handle default state entry if needed*/}
+        template <class State>
+        auto on_exit(State&) {/*handle default state exit if needed*/}
+
+    };
+
+
 
 ## Usage:
 in order to use the library one must:
 1. first create the structs/classes used as events and states.
 2. order states/events in a variant, the first index in the state variant is the entry state. (see example)
 3. create a class which inherits the fsm task variants and itself (CRTP) as template arguments, and task info as ctor args
+
+## on_entry and on_exit:
+This are optional events that can be enabled via macro CALL_ON_STATE_ENTRY and CALL_ON_STATE_EXIT.
+It is not a good idea to do entry/exit logic in the state structs ctor and dtor as they are copied and will be constructed and destructed more than once.
 
 ##   Example for a button fsm:
 
