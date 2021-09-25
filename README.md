@@ -13,7 +13,7 @@ But doing the old task initialization, event group, semaphore etc.. we create bo
 and as a result the task function itself looks like a mass of if's and elses.
 A better abstraction of a class, especially big manager tasks will be divided into states and events.
 
-This library wants to change this (untested code):
+#### This library wants to change this (untested code):
 
     class SomeManager {
     public:
@@ -61,7 +61,7 @@ This library wants to change this (untested code):
         }
    }
    
-to something like this:
+#### to something like this:
 
     #define CALL_ON_STATE_ENTRY 1
     #define CALL_ON_STATE_EXIT 1
@@ -79,9 +79,10 @@ to something like this:
     {
         public:
         SomeManager() : FsmTask(2048, 3, "name") {}
-    
+        
         auto on_event(STATE_1&, EVENT_1&) {return STATE_2{};}
         auto on_event(STATE_1&, EVENT_2&) {return std::nullopt;}
+        
         auto on_event(STATE_2&, EVENT_1&) {return STATE_1{};}
         auto on_event(STATE_2&, EVENT_2&) {return std::nullopt;}
     
