@@ -104,7 +104,7 @@
 
 //define as 1 if on_entry(state) functions required. (see example)
 #ifndef CALL_ON_STATE_ENTRY
-#define CALL_ON_STATE_ENTRY 0
+#define CALL_ON_STATE_ENTRY 1
 #endif
 
 //define as 1 if on_exit(state) functions required. (see example)
