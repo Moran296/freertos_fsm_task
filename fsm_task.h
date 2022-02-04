@@ -82,6 +82,7 @@
     };
 
     ButtonFSM button;
+    button.Start();
 
     bool dispatchedSuccessfully = button.Dispatch(press_event{});
     configASSERT(dispatchedSuccessfully); // Check if dispatched successfully, otherwise might be better to enlarge event queue
@@ -120,6 +121,10 @@ public:
     //Create the FSM Task
     FsmTask(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize = EVENT_QUEUE_DEFAULT_SIZE);
 
+    //Start the FSM Task
+    void Start();
+    void Start(StateVariant&& state);
+
     //Dispatch an event to state machine
     template <typename Event>
     bool Dispatch(Event &&event, TickType_t timeout = 0);
@@ -150,6 +155,7 @@ private:
     void dispatch();
     void handleNewState(std::optional<StateVariant> &&newState);
 
+    bool m_isRunning{false};
     StateVariant m_states{};
     EventVariant m_events{};
     TaskHandle_t m_task{};
@@ -168,11 +174,32 @@ FsmTask<Derived, StateVariant, EventVariant>::FsmTask(uint32_t taskSize, uint8_t
     configASSERT(m_task != nullptr);
 }
 
+
+template <typename Derived, typename StateVariant, typename EventVariant>
+bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
+    configASSERT(!m_isRunning);
+
+    m_isRunning = true;
+    xTaskNotifyGive(m_task);
+}
+
+template <typename Derived, typename StateVariant, typename EventVariant>
+bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
+    configASSERT(!m_isRunning);
+
+    m_isRunning = true;
+    m_states = std::move(state);
+    xTaskNotifyGive(m_task);
+}
+
 //DISPATCH AN EVENT
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
 bool FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, TickType_t timeout)
 {
+    if (!m_isRunning)
+        return false;
+
     EventVariant var{event};
     return xQueueSend(m_eventQueue, &var, timeout) == pdTRUE;
 }
@@ -200,6 +227,15 @@ void FsmTask<Derived, StateVariant, EventVariant>::s_mainTaskFunc(void *arg)
 template <typename Derived, typename StateVariant, typename EventVariant>
 void FsmTask<Derived, StateVariant, EventVariant>::mainTaskFunc()
 {
+    ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+    if constexpr (CALL_ON_STATE_ENTRY)
+    {
+        Derived &child = static_cast<Derived &>(*this);
+        std::visit([&](auto &stateVar)
+                   { child.on_entry(stateVar); },
+                   m_states);
+    }
+
     for (;;)
     {
         xQueueReceive(m_eventQueue, &m_events, portMAX_DELAY);
