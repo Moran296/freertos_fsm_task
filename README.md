@@ -13,6 +13,15 @@ But doing the old task initialization, event group, semaphore etc.. we create bo
 and as a result the task function itself looks like a mass of if's and elses.
 A better abstraction of a class, especially big manager tasks will be divided into states and events.
 
+## API functions:
+
+Constructor(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize)
+void Start() // start the fsm
+void Start(State&&) //start the fsm from the given state
+bool Dispatch(Event &&event, TickType_t timeout = 0); // Dispatch an event to the FSM
+bool DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken); //like above from ISR
+bool IsInState<State>() const
+
 #### This library wants to change this (untested code):
 
     class SomeManager {
@@ -198,6 +207,7 @@ It is not a good idea to do entry/exit logic in the state structs ctor and dtor 
     int main() {
 
         ButtonFSM button;
+        button.Start();
 
         configASSERT(button.IsInState<state_idle>()); //we start at idle state
 
