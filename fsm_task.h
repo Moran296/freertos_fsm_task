@@ -136,6 +136,7 @@ public:
     template <class State>
     bool IsInState() const { return std::holds_alternative<State>(m_states); }
 
+protected:
     // Get the state if the state is the requested otherwise asserts
     template <class State>
     State &Get()
