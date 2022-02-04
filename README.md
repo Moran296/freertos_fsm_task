@@ -15,12 +15,12 @@ A better abstraction of a class, especially big manager tasks will be divided in
 
 ## API functions:
 
-Constructor(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize)
-void Start() // start the fsm
-void Start(State&&) //start the fsm from the given state
-bool Dispatch(Event &&event, TickType_t timeout = 0); // Dispatch an event to the FSM
-bool DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken); //like above from ISR
-bool IsInState<State>() const
+- Constructor(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize)
+- void Start() // start the fsm
+- void Start(State&&) //start the fsm from the given state
+- bool Dispatch(Event &&event, TickType_t timeout = 0); // Dispatch an event to the FSM
+- bool DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken); //like above from ISR
+- bool IsInState<State>() const
 
 #### This library wants to change this (untested code):
 
