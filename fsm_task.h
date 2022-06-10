@@ -102,12 +102,12 @@
 
 */
 
-//define as 1 if on_entry(state) functions required. (see example)
+// define as 1 if on_entry(state) functions required. (see example)
 #ifndef CALL_ON_STATE_ENTRY
 #define CALL_ON_STATE_ENTRY 1
 #endif
 
-//define as 1 if on_exit(state) functions required. (see example)
+// define as 1 if on_exit(state) functions required. (see example)
 #ifndef CALL_ON_STATE_EXIT
 #define CALL_ON_STATE_EXIT 0
 #endif
@@ -118,21 +118,21 @@ class FsmTask
     static constexpr uint8_t EVENT_QUEUE_DEFAULT_SIZE{3};
 
 public:
-    //Create the FSM Task
+    // Create the FSM Task
     FsmTask(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize = EVENT_QUEUE_DEFAULT_SIZE);
 
-    //Start the FSM Task
+    // Start the FSM Task
     void Start();
-    void Start(StateVariant&& state);
+    void Start(StateVariant &&state);
 
-    //Dispatch an event to state machine
+    // Dispatch an event to state machine
     template <typename Event>
     bool Dispatch(Event &&event, TickType_t timeout = 0);
 
     template <typename Event>
     bool DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken);
 
-    //Whether the fsm is currently in a certain state
+    // Whether the fsm is currently in a certain state
     template <class State>
     bool IsInState() const { return std::holds_alternative<State>(m_states); }
 
@@ -145,7 +145,7 @@ protected:
         return std::get<State>(m_states);
     }
 
-    //Get the states variant
+    // Get the states variant
     const StateVariant &GetStates() const { return m_states; }
     StateVariant &GetStates() { return m_states; }
 
@@ -165,7 +165,7 @@ private:
 
 //----------------------- PUBLIC FUNTIONS IMPLEMENTATION ------------------------
 
-//CONSTRUCTOR
+// CONSTRUCTOR
 template <typename Derived, typename StateVariant, typename EventVariant>
 FsmTask<Derived, StateVariant, EventVariant>::FsmTask(uint32_t taskSize, uint8_t priority, const char *name, uint8_t eventQueueSize)
 {
@@ -175,9 +175,9 @@ FsmTask<Derived, StateVariant, EventVariant>::FsmTask(uint32_t taskSize, uint8_t
     configASSERT(m_task != nullptr);
 }
 
-
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
+bool FsmTask<Derived, StateVariant, EventVariant>::Start()
+{
     configASSERT(!m_isRunning);
 
     m_isRunning = true;
@@ -185,7 +185,8 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
 }
 
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
+bool FsmTask<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
+{
     configASSERT(!m_isRunning);
 
     m_isRunning = true;
@@ -193,7 +194,7 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Start() {
     xTaskNotifyGive(m_task);
 }
 
-//DISPATCH AN EVENT
+// DISPATCH AN EVENT
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
 bool FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, TickType_t timeout)
@@ -205,7 +206,7 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event, TickT
     return xQueueSend(m_eventQueue, &var, timeout) == pdTRUE;
 }
 
-//DISPATCH AN EVENT FROM ISR
+// DISPATCH AN EVENT FROM ISR
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
 bool FsmTask<Derived, StateVariant, EventVariant>::DispatchFromISR(Event &&event, BaseType_t *const xHigherPriorityTaskWoken)
@@ -246,19 +247,20 @@ void FsmTask<Derived, StateVariant, EventVariant>::mainTaskFunc()
 
 //------------------------ PRIVATE FUNTIONS IMPLEMENTATION ----------------------
 
-//PRIVATE DISPATCH HANDLING
+// PRIVATE DISPATCH HANDLING
 template <typename Derived, typename StateVariant, typename EventVariant>
 void FsmTask<Derived, StateVariant, EventVariant>::dispatch()
 {
     Derived &child = static_cast<Derived &>(*this);
     auto newState = std::visit(
-        [&](auto &stateVar, auto &eventVar) -> std::optional<StateVariant> { return child.on_event(stateVar, eventVar); },
+        [&](auto &stateVar, auto &eventVar) -> std::optional<StateVariant>
+        { return child.on_event(stateVar, eventVar); },
         m_states, m_events);
 
     handleNewState(std::move(newState));
 }
 
-//HANDLE NEW STATE TRANSITION
+// HANDLE NEW STATE TRANSITION
 template <typename Derived, typename StateVariant, typename EventVariant>
 void FsmTask<Derived, StateVariant, EventVariant>::handleNewState(std::optional<StateVariant> &&newState)
 {
