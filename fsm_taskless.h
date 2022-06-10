@@ -100,6 +100,7 @@ void FsmTaskless<Derived, StateVariant, EventVariant>::Dispatch(Event &&event)
 {
     configASSERT(m_isRunning);
 
+    m_events = std::move(event);
     Derived &child = static_cast<Derived &>(*this);
     auto newState = std::visit(
         [&](auto &stateVar, auto &eventVar) -> std::optional<StateVariant>
