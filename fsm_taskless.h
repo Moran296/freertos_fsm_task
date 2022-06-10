@@ -61,7 +61,7 @@ private:
 //----------------------- PUBLIC FUNTIONS IMPLEMENTATION ------------------------
 
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTask<Derived, StateVariant, EventVariant>::Start()
+bool FsmTaskless<Derived, StateVariant, EventVariant>::Start()
 {
     configASSERT(!m_isRunning);
 
@@ -76,7 +76,7 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Start()
 }
 
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTask<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
+bool FsmTaskless<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
 {
     configASSERT(!m_isRunning);
 
@@ -94,7 +94,7 @@ bool FsmTask<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
 // DISPATCH AN EVENT
 template <typename Derived, typename StateVariant, typename EventVariant>
 template <typename Event>
-void FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event)
+void FsmTaskless<Derived, StateVariant, EventVariant>::Dispatch(Event &&event)
 {
     configASSERT(m_isRunning);
 
@@ -111,7 +111,7 @@ void FsmTask<Derived, StateVariant, EventVariant>::Dispatch(Event &&event)
 
 // HANDLE NEW STATE TRANSITION
 template <typename Derived, typename StateVariant, typename EventVariant>
-void FsmTask<Derived, StateVariant, EventVariant>::handleNewState(std::optional<StateVariant> &&newState)
+void FsmTaskless<Derived, StateVariant, EventVariant>::handleNewState(std::optional<StateVariant> &&newState)
 {
     Derived &child = static_cast<Derived &>(*this);
     if (!newState)
