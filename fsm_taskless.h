@@ -69,6 +69,7 @@ void FsmTaskless<Derived, StateVariant, EventVariant>::Start()
 
     if constexpr (CALL_ON_STATE_ENTRY)
     {
+        Derived &child = static_cast<Derived &>(*this);
         std::visit([&](auto &stateVar)
                    { child.on_entry(stateVar); },
                    m_states);
@@ -85,6 +86,7 @@ void FsmTaskless<Derived, StateVariant, EventVariant>::Start(StateVariant &&stat
 
     if constexpr (CALL_ON_STATE_ENTRY)
     {
+        Derived &child = static_cast<Derived &>(*this);
         std::visit([&](auto &stateVar)
                    { child.on_entry(stateVar); },
                    m_states);
