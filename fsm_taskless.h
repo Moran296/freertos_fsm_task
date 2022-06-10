@@ -31,7 +31,7 @@ public:
 
     // Dispatch an event to state machine
     template <typename Event>
-    bool Dispatch(Event &&event);
+    void Dispatch(Event &&event);
 
     // Whether the fsm is currently in a certain state
     template <class State>
@@ -61,7 +61,7 @@ private:
 //----------------------- PUBLIC FUNTIONS IMPLEMENTATION ------------------------
 
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTaskless<Derived, StateVariant, EventVariant>::Start()
+void FsmTaskless<Derived, StateVariant, EventVariant>::Start()
 {
     configASSERT(!m_isRunning);
 
@@ -76,7 +76,7 @@ bool FsmTaskless<Derived, StateVariant, EventVariant>::Start()
 }
 
 template <typename Derived, typename StateVariant, typename EventVariant>
-bool FsmTaskless<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
+void FsmTaskless<Derived, StateVariant, EventVariant>::Start(StateVariant &&state)
 {
     configASSERT(!m_isRunning);
 
